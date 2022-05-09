@@ -16,46 +16,22 @@
 // 構造体
 //==================================================
 
-/*↓ キー ↓*/
-
-struct SKey
-{
-	D3DXVECTOR3	pos;	// 位置
-	D3DXVECTOR3	rot;	// 向き
-};
-
-/*↓ キー設定 ↓*/
-
-struct SKeySet
-{
-	int		nFrame;	// フレーム数
-	SKey*	pKey;	// キー
-};
-
-/*↓ モーション設定 ↓*/
-
-struct SMotion
-{
-	bool		bLoop;		// ループするかどうか
-	int			nNumKey;	// キー数
-	SKeySet*	pKeySet;	// キー設定
-};
-
 /*↓ パーツ ↓*/
 
 struct SParts
 {
-	D3DXVECTOR3	pos;			// 位置
-	D3DXVECTOR3	posOld;			// 前回の位置
-	D3DXVECTOR3	posSet;			// 設定の位置
-	D3DXVECTOR3	rot;			// 向き
-	D3DXVECTOR3	rotOld;			// 前回の向き
-	D3DXVECTOR3	rotSet;			// 設定の向き
-	D3DXVECTOR3	size;			// サイズ
-	D3DXMATRIX	mtxWorld;		// ワールドマトリックス
-	ETexture	texture;		// テクスチャ
-	int			idxParent;		// 親の番号
-	int			idxPriority;	// 描画の優先順位
+	D3DXVECTOR3				pos;			// 位置
+	D3DXVECTOR3				posOld;			// 前回の位置
+	D3DXMATRIX				mtxWorld;		// マトリックス
+	LPDIRECT3DVERTEXBUFFER9	pVtxBuff;		// 頂点バッファ
+	ETexture				texture;		// テクスチャ
+	int						idxRectangle;	// 矩形の番号
+	int						idxParent;		// 親の番号
+	int						idxPriority;	// 描画の優先順位
+	float					rot;			// 向き
+	float					rotOld;			// 前回の向き
+	float					width;			// 幅
+	float					height;			// 高さ
 };
 
 /*↓ モデル↓*/
@@ -64,13 +40,13 @@ struct SModel
 {
 	D3DXVECTOR3	pos;		// 位置
 	D3DXVECTOR3	posOld;		// 前回の位置
-	D3DXVECTOR3	rot;		// 向き
-	D3DXVECTOR3	rotDest;	// 目的の向き
 	D3DXVECTOR3	move;		// 移動量
-	D3DXMATRIX	mtxWorld;	// ワールドマトリックス
+	D3DXMATRIX	mtxWorld;	// マトリックス
 	SParts*		pParts;		// パーツの情報
 	int			numParts;	// パーツ数
 	float		moveLoad;	// 読み込んだ移動量
+	float		rot;		// 向き
+	float		rotDest;	// 目的の向き
 };
 
 //==================================================

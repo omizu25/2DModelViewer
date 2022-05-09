@@ -18,6 +18,7 @@
 #include "utility.h"
 #include "bg.h"
 #include "model.h"
+#include "camera.h"
 
 #include <assert.h>
 
@@ -42,6 +43,9 @@ void InitGame(void)
 	// モデルの初期化
 	InitModel();
 
+	// カメラの初期化
+	InitCamera();
+
 	s_gameState = GAMESTATE_SAMPLE;	// サンプル状態に設定
 
 	s_counterState = 0;	// カウンターの初期化
@@ -59,6 +63,9 @@ void UninitGame(void)
 
 	// モデルの終了
 	UninitModel();
+
+	// カメラの終了
+	UninitCamera();
 }
 
 //--------------------------------------------------
@@ -68,6 +75,9 @@ void UpdateGame(void)
 {
 	// モデルの更新
 	UpdateModel();
+
+	// カメラの更新
+	UpdateCamera();
 }
 
 //--------------------------------------------------
@@ -75,8 +85,11 @@ void UpdateGame(void)
 //--------------------------------------------------
 void DrawGame(void)
 {
+	// カメラの設定
+	SetCamera();
+
 	// 矩形の描画
-	DrawRectangle();
+	//DrawRectangle();
 
 	// モデルの描画
 	DrawModel();
