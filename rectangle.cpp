@@ -23,14 +23,14 @@ const int	MAX_RECTANGLE = 1024;	// 矩形の最大数
 const int	NUM_VERTEX = 4;			// 頂点の数
 const int	NUM_POLYGON = 2;		// ポリゴンの数
 
-typedef struct
+struct SRectangle
 {
 	LPDIRECT3DTEXTURE9		pTexture;	// テクスチャ
 	LPDIRECT3DVERTEXBUFFER9	pVtxBuff;	// 頂点バッファ
 	bool					use;		// 使用しているかどうか
 	bool					draw;		// 描画するかどうか
 	bool					add;		// 加算合成するかどうか
-}MyRectangle;
+};
 }// namespaceはここまで
 
 //==================================================
@@ -38,7 +38,7 @@ typedef struct
 //==================================================
 namespace
 {
-MyRectangle	s_rectangle[MAX_RECTANGLE];	// 矩形の情報
+SRectangle	s_rectangle[MAX_RECTANGLE];	// 矩形の情報
 }// namespaceはここまで
 
 //--------------------------------------------------
@@ -57,7 +57,7 @@ void UninitRectangle(void)
 {
 	for (int i = 0; i < MAX_RECTANGLE; i++)
 	{
-		MyRectangle *pRectangle = &s_rectangle[i];
+		SRectangle *pRectangle = &s_rectangle[i];
 
 		if (pRectangle->pVtxBuff != NULL)
 		{// 頂点バッファの解放
@@ -77,7 +77,7 @@ void DrawRectangle(void)
 
 	for (int i = 0; i < MAX_RECTANGLE; i++)
 	{
-		MyRectangle *pRectangle = &s_rectangle[i];
+		SRectangle *pRectangle = &s_rectangle[i];
 
 		if (!pRectangle->use || !pRectangle->draw)
 		{// 使用していない、描画するしない
@@ -125,7 +125,7 @@ void DrawRectangle(void)
 //--------------------------------------------------
 // 設定
 //--------------------------------------------------
-int SetRectangle(TEXTURE inTexture)
+int SetRectangle(ETexture inTexture)
 {
 	// 設定 [ テクスチャあり ]
 	return SetRectangleWithTex(GetTexture(inTexture));
@@ -138,7 +138,7 @@ int SetRectangleWithTex(LPDIRECT3DTEXTURE9 pTexture)
 {
 	for (int i = 0; i < MAX_RECTANGLE; i++)
 	{
-		MyRectangle *pRectangle = &s_rectangle[i];
+		SRectangle *pRectangle = &s_rectangle[i];
 
 		if (pRectangle->use)
 		{// 使用している
@@ -204,7 +204,7 @@ void StopUseRectangle(int inIdx)
 {
 	assert(inIdx >= 0 && inIdx < MAX_RECTANGLE);
 
-	MyRectangle *pRectangle = &s_rectangle[inIdx];
+	SRectangle *pRectangle = &s_rectangle[inIdx];
 
 	pRectangle->use = false;
 
@@ -222,7 +222,7 @@ void SetPosRectangle(int inIdx, const D3DXVECTOR3& inPos, const D3DXVECTOR3& inS
 {
 	assert(inIdx >= 0 && inIdx < MAX_RECTANGLE);
 
-	MyRectangle *pRectangle = &s_rectangle[inIdx];
+	SRectangle *pRectangle = &s_rectangle[inIdx];
 
 	if (!pRectangle->use)
 	{// 使用していない
@@ -258,7 +258,7 @@ void SetRotationPosRectangle(int inIdx, const D3DXVECTOR3& inPos, float inRot, f
 {
 	assert(inIdx >= 0 && inIdx < MAX_RECTANGLE);
 
-	MyRectangle *pRectangle = &s_rectangle[inIdx];
+	SRectangle *pRectangle = &s_rectangle[inIdx];
 
 	if (!pRectangle->use)
 	{// 使用していない
@@ -309,7 +309,7 @@ void SetColorRectangle(int inIdx, const D3DXCOLOR& inColor)
 {
 	assert(inIdx >= 0 && inIdx < MAX_RECTANGLE);
 
-	MyRectangle *pRectangle = &s_rectangle[inIdx];
+	SRectangle *pRectangle = &s_rectangle[inIdx];
 
 	if (!pRectangle->use)
 	{// 使用していない
@@ -342,7 +342,7 @@ void SetTexRectangle(int inIdx, const D3DXVECTOR2& inTexU, const D3DXVECTOR2& in
 {
 	assert(inIdx >= 0 && inIdx < MAX_RECTANGLE);
 
-	MyRectangle *pRectangle = &s_rectangle[inIdx];
+	SRectangle *pRectangle = &s_rectangle[inIdx];
 
 	if (!pRectangle->use)
 	{// 使用していない
@@ -374,7 +374,7 @@ void SetDrawRectangle(int inIdx, bool inDraw)
 {
 	assert(inIdx >= 0 && inIdx < MAX_RECTANGLE);
 
-	MyRectangle *pRectangle = &s_rectangle[inIdx];
+	SRectangle *pRectangle = &s_rectangle[inIdx];
 
 	if (!pRectangle->use)
 	{// 使用していない
@@ -393,7 +393,7 @@ void SetAddRectangle(int inIdx, bool inAdd)
 {
 	assert(inIdx >= 0 && inIdx < MAX_RECTANGLE);
 
-	MyRectangle *pRectangle = &s_rectangle[inIdx];
+	SRectangle *pRectangle = &s_rectangle[inIdx];
 
 	if (!pRectangle->use)
 	{// 使用していない
@@ -408,7 +408,7 @@ void SetAddRectangle(int inIdx, bool inAdd)
 //--------------------------------------------------
 // テクスチャの変更
 //--------------------------------------------------
-void ChangeTextureRectangle(int inIdx, TEXTURE inTexture)
+void ChangeTextureRectangle(int inIdx, ETexture inTexture)
 {
 	// テクスチャの変更 [ テクスチャあり ]
 	ChangeTextureRectangleWithTex(inIdx, GetTexture(inTexture));
@@ -421,7 +421,7 @@ void ChangeTextureRectangleWithTex(int inIdx, LPDIRECT3DTEXTURE9 pTexture)
 {
 	assert(inIdx >= 0 && inIdx < MAX_RECTANGLE);
 
-	MyRectangle *pRectangle = &s_rectangle[inIdx];
+	SRectangle *pRectangle = &s_rectangle[inIdx];
 
 	if (!pRectangle->use)
 	{// 使用していない
@@ -440,7 +440,7 @@ LPDIRECT3DVERTEXBUFFER9 GetVtxBuffRectangle(int inIdx)
 {
 	assert(inIdx >= 0 && inIdx < MAX_RECTANGLE);
 
-	MyRectangle *pRectangle = &s_rectangle[inIdx];
+	SRectangle *pRectangle = &s_rectangle[inIdx];
 
 	if (!pRectangle->use)
 	{// 使用していない

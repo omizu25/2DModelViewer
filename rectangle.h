@@ -48,9 +48,9 @@ void DrawRectangle(void);
 
 //--------------------------------------------------
 // 設定
-// 引数  : TEXTURE inTexture / 列挙型 種類
+// 引数  : ETexture inTexture / 列挙型 種類
 //--------------------------------------------------
-int SetRectangle(TEXTURE inTexture);
+int SetRectangle(ETexture inTexture);
 
 //--------------------------------------------------
 // 設定 [ テクスチャあり ]
@@ -114,9 +114,9 @@ void SetAddRectangle(int inIdx, bool inAdd);
 //--------------------------------------------------
 // テクスチャの変更
 // 引数1  : int inIdx / インデックス
-// 引数2  : TEXTURE inTexture / 列挙型 種類
+// 引数2  : ETexture inTexture / 列挙型 種類
 //--------------------------------------------------
-void ChangeTextureRectangle(int inIdx, TEXTURE inTexture);
+void ChangeTextureRectangle(int inIdx, ETexture inTexture);
 
 //--------------------------------------------------
 // テクスチャの変更 [ テクスチャあり ]

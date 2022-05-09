@@ -60,7 +60,7 @@ void LoadTextureAll(void)
 //--------------------------------------------------
 // 読み込み
 //--------------------------------------------------
-void LoadTexture(TEXTURE inTexture)
+void LoadTexture(ETexture inTexture)
 {
 	assert(inTexture >= 0 && inTexture < TEXTURE_MAX);
 
@@ -96,7 +96,7 @@ void UnloadTextureAll(void)
 //--------------------------------------------------
 // 解放
 //--------------------------------------------------
-void UnloadTexture(TEXTURE inTexture)
+void UnloadTexture(ETexture inTexture)
 {
 	assert(inTexture >= 0 && inTexture < TEXTURE_MAX);
 
@@ -109,19 +109,17 @@ void UnloadTexture(TEXTURE inTexture)
 
 //--------------------------------------------------
 // 取得
-// 引数  : char* inFileName / 文字列 ファイル名
-// 返値  : TEXTURE / テクスチャの種類
 //--------------------------------------------------
-TEXTURE GetFileNameTexture(char* inFileName)
+ETexture GetFileNameTexture(char* inFileName)
 {
 	for (int i = 0; i < TEXTURE_MAX; i++)
 	{
 		if (strcmp(inFileName, s_FileName[i]) == 0)
 		{// 文字列が同じ
 			// 読み込み
-			LoadTexture((TEXTURE)i);
+			LoadTexture((ETexture)i);
 
-			return (TEXTURE)i;
+			return (ETexture)i;
 		}
 	}
 
@@ -132,7 +130,7 @@ TEXTURE GetFileNameTexture(char* inFileName)
 //--------------------------------------------------
 // 取得
 //--------------------------------------------------
-LPDIRECT3DTEXTURE9 GetTexture(TEXTURE inTexture)
+LPDIRECT3DTEXTURE9 GetTexture(ETexture inTexture)
 {
 	if (inTexture == TEXTURE_NONE)
 	{// テクスチャを使用しない

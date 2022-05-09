@@ -17,6 +17,7 @@
 #include "time.h"
 #include "utility.h"
 #include "bg.h"
+#include "model.h"
 
 #include <assert.h>
 
@@ -38,6 +39,9 @@ void InitGame(void)
 	// 背景の初期化
 	InitBG();
 
+	// モデルの初期化
+	InitModel();
+
 	s_gameState = GAMESTATE_SAMPLE;	// サンプル状態に設定
 
 	s_counterState = 0;	// カウンターの初期化
@@ -52,6 +56,9 @@ void UninitGame(void)
 {
 	// 背景の終了
 	UninitBG();
+
+	// モデルの終了
+	UninitModel();
 }
 
 //--------------------------------------------------
@@ -59,6 +66,8 @@ void UninitGame(void)
 //--------------------------------------------------
 void UpdateGame(void)
 {
+	// モデルの更新
+	UpdateModel();
 }
 
 //--------------------------------------------------
@@ -68,6 +77,9 @@ void DrawGame(void)
 {
 	// 矩形の描画
 	DrawRectangle();
+
+	// モデルの描画
+	DrawModel();
 }
 
 //--------------------------------------------------

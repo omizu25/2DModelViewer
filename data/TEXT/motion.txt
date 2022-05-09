@@ -11,15 +11,15 @@
 NUM_TEXTURE = 2
 
 #==================================================
-# モデルファイル名
+# テクスチャのパス
 #==================================================
 TEXTURE_FILENAME = data/TEXTURE/icon_122380_256.png	# [0]頭
 TEXTURE_FILENAME = data/TEXTURE/icon_122540_256.png	# [1]体
 
 #--------------------------------------------------
-# キャラクター情報
+# モデル情報
 #--------------------------------------------------
-CHARACTERSET
+MODELSET
 	NUM_PARTS = 5	# パーツ数
 	MOVE = 4.0		# 移動量
 
@@ -67,4 +67,4 @@ CHARACTERSET
 		SIZE = 10.0 10.0 0.0
 		PRIORITY = 4
 	END_PARTSSET
-END_CHARACTERSET
+END_MODELSET
