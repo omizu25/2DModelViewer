@@ -54,7 +54,6 @@ struct SParts
 	D3DXVECTOR3	size;			// サイズ
 	D3DXMATRIX	mtxWorld;		// ワールドマトリックス
 	ETexture	texture;		// テクスチャ
-	int			idxTexture;		// 使用するテクスチャの番号
 	int			idxParent;		// 親の番号
 	int			idxPriority;	// 描画の優先順位
 };

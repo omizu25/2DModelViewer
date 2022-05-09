@@ -38,8 +38,8 @@ SModel	s_model;	// モデルの情報
 namespace
 {
 void Load(void);
-void LoadModel(FILE* pFile);
-void LoadParts(FILE* pFile, int parts);
+void LoadModel(FILE* pFile, ETexture* pTexture);
+void LoadParts(FILE* pFile, ETexture* pTexture, int parts);
 }// namespaceはここまで
 
 //--------------------------------------------------
@@ -140,7 +140,7 @@ void Load(void)
 		else if (strcmp(read, "MODELSET") == 0)
 		{// モデルの情報
 			// モデルの読み込み
-			LoadModel(pFile);
+			LoadModel(pFile, pTextute);
 		}
 	}
 
@@ -157,7 +157,7 @@ void Load(void)
 //--------------------------------------------------
 // モデルの読み込み
 //--------------------------------------------------
-void LoadModel(FILE* pFile)
+void LoadModel(FILE* pFile, ETexture* pTexture)
 {
 	char read[MAX_TEXT] = {};
 	int parts = 0;
@@ -194,7 +194,7 @@ void LoadModel(FILE* pFile)
 		else if (strcmp(read, "PARTSSET") == 0)
 		{// パーツの情報
 			// パーツの読み込み
-			LoadParts(pFile, parts);
+			LoadParts(pFile, pTexture, parts);
 			parts++;
 		}
 	}
@@ -203,7 +203,7 @@ void LoadModel(FILE* pFile)
 //--------------------------------------------------
 // パーツの読み込み
 //--------------------------------------------------
-void LoadParts(FILE* pFile, int parts)
+void LoadParts(FILE* pFile, ETexture* pTexture, int parts)
 {
 	char read[MAX_TEXT] = {};
 	SParts* pParts = &s_model.pParts[parts];
@@ -220,8 +220,10 @@ void LoadParts(FILE* pFile, int parts)
 
 		if (strcmp(read, "INDEX") == 0)
 		{// 使用するテクスチャの番号
+			int idx = 0;
 			fscanf(pFile, "%s", &read);
-			fscanf(pFile, "%d", &pParts->idxTexture);
+			fscanf(pFile, "%d", &idx);
+			pParts->texture = pTexture[idx];
 		}
 		else if (strcmp(read, "PARENT") == 0)
 		{// 親の番号
