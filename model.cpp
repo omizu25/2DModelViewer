@@ -11,7 +11,6 @@
 #include "main.h"
 #include "input.h"
 #include "model.h"
-#include "rectangle3D.h"
 #include "color.h"
 #include "utility.h"
 
@@ -23,6 +22,18 @@
 //==================================================
 namespace
 {
+#define FVF_VERTEX_3D	(D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_DIFFUSE | D3DFVF_TEX1)	// 頂点フォーマット[3D] 位置・法線・カラー・テクスチャ
+
+/*↓ 頂点情報[3D] ↓*/
+
+struct VERTEX_3D
+{
+	D3DXVECTOR3	pos;	// 頂点座標
+	D3DXVECTOR3	nor;	// 法線ベクトル
+	D3DCOLOR	col;	// 頂点カラー
+	D3DXVECTOR2	tex;	// テクスチャ座標
+};
+
 const char*	FILE_NAME = "data/TEXT/motion.txt";	// ファイル名
 const int	MAX_TEXT = 1024;					// テキストの最大数
 const int	IDX_PARENT = -1;					// 親の番号
@@ -43,7 +54,10 @@ namespace
 {
 void Load(void);
 void LoadModel(FILE* pFile, ETexture* pTexture);
-void LoadParts(FILE* pFile, ETexture* pTexture, int parts);
+void LoadParts(FILE* pFile, ETexture* pTexture, SParts* pParts);
+void LoadMotion(FILE* pFile, SMotion* pMotion);
+void LoadKeySet(FILE* pFile, SKeySet* pKeySet);
+void LoadKey(FILE* pFile, SKey* pKey);
 void Move(void);
 void Rot(void);
 }// namespaceはここまで
@@ -59,6 +73,8 @@ void InitModel(void)
 	// 読み込み
 	Load();
 
+	VERTEX_3D *pVtx = nullptr;	// 頂点情報へのポインタ
+
 	for (int i = 0; i < s_model.numParts; i++)
 	{
 		SParts* pParts = &s_model.pParts[i];
@@ -72,16 +88,8 @@ void InitModel(void)
 			&pParts->pVtxBuff,
 			NULL);
 
-		VERTEX_3D *pVtx = NULL;		// 頂点情報へのポインタ
-
 		// 頂点情報をロックし、頂点情報へのポインタを取得
 		pParts->pVtxBuff->Lock(0, 0, (void**)&pVtx, 0);
-
-		// 頂点座標の設定
-		pVtx[0].nor = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
-		pVtx[1].nor = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
-		pVtx[2].nor = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
-		pVtx[3].nor = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
 
 		float width = pParts->width * 0.5f;
 		float height = pParts->height * 0.5f;
@@ -92,12 +100,19 @@ void InitModel(void)
 		pVtx[2].pos = D3DXVECTOR3(-width, -height, 0.0f);
 		pVtx[3].pos = D3DXVECTOR3(+width, -height, 0.0f);
 
+		// 法線の設定
+		pVtx[0].nor = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
+		pVtx[1].nor = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
+		pVtx[2].nor = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
+		pVtx[3].nor = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
+
 		// 頂点カラーの設定
 		pVtx[0].col = GetColor(COLOR_WHITE);
 		pVtx[1].col = GetColor(COLOR_WHITE);
 		pVtx[2].col = GetColor(COLOR_WHITE);
 		pVtx[3].col = GetColor(COLOR_WHITE);
 
+		// テクスチャ座標の設定
 		pVtx[0].tex = D3DXVECTOR2(0.0f, 0.0f);
 		pVtx[1].tex = D3DXVECTOR2(1.0f, 0.0f);
 		pVtx[2].tex = D3DXVECTOR2(0.0f, 1.0f);
@@ -129,6 +144,28 @@ void UninitModel(void)
 		delete[] s_model.pParts;
 		s_model.pParts = nullptr;
 	}
+
+	for (int i = 0; i < TYPE_MAX; i++)
+	{
+		SMotion* pMotion = &s_model.motion[i];
+
+		for (int j = 0; j < pMotion->nNumKey; j++)
+		{
+			SKeySet* pKeySet = &pMotion->pKeySet[i];
+
+			if (pKeySet->pKey != nullptr)
+			{// NULLチェック
+				delete[] pKeySet->pKey;
+				pKeySet->pKey = nullptr;
+			}
+		}
+
+		if (pMotion->pKeySet != nullptr)
+		{// NULLチェック
+			delete[] pMotion->pKeySet;
+			pMotion->pKeySet = nullptr;
+		}
+	}
 }
 
 //--------------------------------------------------
@@ -151,7 +188,7 @@ void DrawModel(void)
 	// デバイスへのポインタの取得
 	LPDIRECT3DDEVICE9 pDevice = GetDevice();
 
-	D3DXMATRIX mtxRot, mtxTrans;	// 計算用マトリックス
+	D3DXMATRIX mtxRot, mtxTrans, mtxParent;	// 計算用マトリックス
 
 	// ライトを無効にする
 	pDevice->SetRenderState(D3DRS_LIGHTING, FALSE);
@@ -176,8 +213,6 @@ void DrawModel(void)
 		// パーツの位置を反映
 		D3DXMatrixTranslation(&mtxTrans, pParts->pos.x, pParts->pos.y, pParts->pos.z);
 		D3DXMatrixMultiply(&pParts->mtxWorld, &pParts->mtxWorld, &mtxTrans);
-
-		D3DXMATRIX mtxParent;	// 計算用マトリックス
 
 		if (pParts->idxParent == IDX_PARENT)
 		{// 親
@@ -244,6 +279,7 @@ void Load(void)
 	ETexture* pTextute = nullptr;
 	int numTextute = 0;
 	int countTexture = 0;
+	int countMotion = 0;
 	
 	while (fscanf(pFile, "%s", read) != EOF)
 	{// ファイルの最後が来るまで繰り返す
@@ -289,6 +325,14 @@ void Load(void)
 			// モデルの読み込み
 			LoadModel(pFile, pTextute);
 		}
+		else if (strcmp(read, "MOTIONSET") == 0)
+		{// モーションの情報
+			assert(countMotion >= 0 && countMotion < TYPE_MAX);
+
+			// モーションの読み込み
+			LoadMotion(pFile, &s_model.motion[countMotion]);
+			countMotion++;
+		}
 	}
 
 	// ファイルを閉じる
@@ -307,7 +351,7 @@ void Load(void)
 void LoadModel(FILE* pFile, ETexture* pTexture)
 {
 	char read[MAX_TEXT] = {};
-	int parts = 0;
+	int countParts = 0;
 
 	while (strcmp(read, "END_MODELSET") != 0)
 	{// 終わりが来るまで繰り返す
@@ -340,9 +384,11 @@ void LoadModel(FILE* pFile, ETexture* pTexture)
 		}
 		else if (strcmp(read, "PARTSSET") == 0)
 		{// パーツの情報
+			assert(countParts >= 0 && countParts < s_model.numParts);
+
 			// パーツの読み込み
-			LoadParts(pFile, pTexture, parts);
-			parts++;
+			LoadParts(pFile, pTexture, &s_model.pParts[countParts]);
+			countParts++;
 		}
 	}
 }
@@ -350,10 +396,9 @@ void LoadModel(FILE* pFile, ETexture* pTexture)
 //--------------------------------------------------
 // パーツの読み込み
 //--------------------------------------------------
-void LoadParts(FILE* pFile, ETexture* pTexture, int parts)
+void LoadParts(FILE* pFile, ETexture* pTexture, SParts* pParts)
 {
 	char read[MAX_TEXT] = {};
-	SParts* pParts = &s_model.pParts[parts];
 
 	while (strcmp(read, "END_PARTSSET") != 0)
 	{// 終わりが来るまで繰り返す
@@ -405,6 +450,144 @@ void LoadParts(FILE* pFile, ETexture* pTexture, int parts)
 		{// 描画の優先順位
 			fscanf(pFile, "%s", &read);
 			fscanf(pFile, "%d", &pParts->idxPriority);
+		}
+	}
+}
+
+//--------------------------------------------------
+// モーションの読み込み
+//--------------------------------------------------
+void LoadMotion(FILE* pFile, SMotion *pMotion)
+{
+	char read[MAX_TEXT] = {};
+	int countKeySet = 0;
+
+	while (strcmp(read, "END_MOTIONSET") != 0)
+	{// 終わりが来るまで繰り返す
+		fscanf(pFile, "%s", &read);
+
+		if (strncmp(read, "#", 1) == 0)
+		{// コメント
+			fgets(read, MAX_TEXT, pFile);
+			continue;
+		}
+
+		if (strcmp(read, "LOOP") == 0)
+		{// ループするかどうか
+			int loop = 0;
+			fscanf(pFile, "%s", &read);
+			fscanf(pFile, "%d", &loop);
+
+			if (loop == 0)
+			{// ループしない
+				pMotion->bLoop = false;
+			}
+			else
+			{
+				pMotion->bLoop = true;
+			}
+		}
+		else if (strcmp(read, "NUM_KEY") == 0)
+		{// キー数
+			fscanf(pFile, "%s", &read);
+			fscanf(pFile, "%d", &pMotion->nNumKey);
+
+			if (pMotion->pKeySet == nullptr)
+			{// NULLチェック
+				pMotion->pKeySet = new SKeySet[pMotion->nNumKey];
+
+				for (int i = 0; i < pMotion->nNumKey; i++)
+				{
+					pMotion->pKeySet[i].pKey = nullptr;
+				}
+			}
+			else
+			{
+				assert(false);
+			}
+		}
+		else if (strcmp(read, "KEYSET") == 0)
+		{// キー設定の情報
+			assert(countKeySet >= 0 && countKeySet < pMotion->nNumKey);
+
+			// キー設定の読み込み
+			LoadKeySet(pFile, &pMotion->pKeySet[countKeySet]);
+			countKeySet++;
+		}
+	}
+}
+
+//--------------------------------------------------
+// キー設定の読み込み
+//--------------------------------------------------
+void LoadKeySet(FILE* pFile, SKeySet *pKeySet)
+{
+	char read[MAX_TEXT] = {};
+	int countKey = 0;
+
+	if (pKeySet->pKey == nullptr)
+	{// NULLチェック
+		pKeySet->pKey = new SKey[s_model.numParts];
+	}
+	else
+	{
+		assert(false);
+	}
+
+	while (strcmp(read, "END_KEYSET") != 0)
+	{// 終わりが来るまで繰り返す
+		fscanf(pFile, "%s", &read);
+
+		if (strncmp(read, "#", 1) == 0)
+		{// コメント
+			fgets(read, MAX_TEXT, pFile);
+			continue;
+		}
+
+		if (strcmp(read, "FRAME") == 0)
+		{// ループするかどうか
+			fscanf(pFile, "%s", &read);
+			fscanf(pFile, "%d", &pKeySet->nFrame);
+		}
+		else if (strcmp(read, "KEY") == 0)
+		{// キーの情報
+			assert(countKey >= 0 && countKey < s_model.numParts);
+
+			// キーの読み込み
+			LoadKey(pFile, &pKeySet->pKey[countKey]);
+			countKey++;
+		}
+	}
+}
+
+//--------------------------------------------------
+// キーの読み込み
+//--------------------------------------------------
+void LoadKey(FILE* pFile, SKey *pKey)
+{
+	char read[MAX_TEXT] = {};
+
+	while (strcmp(read, "END_KEY") != 0)
+	{// 終わりが来るまで繰り返す
+		fscanf(pFile, "%s", &read);
+
+		if (strncmp(read, "#", 1) == 0)
+		{// コメント
+			fgets(read, MAX_TEXT, pFile);
+			continue;
+		}
+
+		if (strcmp(read, "POS") == 0)
+		{// 位置
+			fscanf(pFile, "%s", &read);
+			fscanf(pFile, "%f", &pKey->pos.x);
+			fscanf(pFile, "%f", &pKey->pos.y);
+			fscanf(pFile, "%f", &pKey->pos.z);
+		}
+		else if (strcmp(read, "ROT") == 0)
+		{// 向き
+			fscanf(pFile, "%s", &read);
+			fscanf(pFile, "%f", &pKey->rot);
 		}
 	}
 }

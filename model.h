@@ -13,8 +13,41 @@
 #include "texture.h"
 
 //==================================================
-// 構造体
+// 定義
 //==================================================
+
+enum EType
+{
+	TYPE_NEUTRAL = 0,	// ニュートラル
+	TYPE_MOVE,			// 移動
+	TYPE_MAX,
+	TYPE_NONE
+};
+
+/*↓ キー ↓*/
+
+struct SKey
+{
+	D3DXVECTOR3	pos;	// 位置
+	float		rot;	// 向き
+};
+
+/*↓ キー設定 ↓*/
+
+struct SKeySet
+{
+	int		nFrame;	// フレーム数
+	SKey*	pKey;	// キー
+};
+
+/*↓ モーション設定 ↓*/
+
+struct SMotion
+{
+	bool		bLoop;		// ループするかどうか
+	int			nNumKey;	// キー数
+	SKeySet*	pKeySet;	// キー設定
+};
 
 /*↓ パーツ ↓*/
 
@@ -38,15 +71,16 @@ struct SParts
 
 struct SModel
 {
-	D3DXVECTOR3	pos;		// 位置
-	D3DXVECTOR3	posOld;		// 前回の位置
-	D3DXVECTOR3	move;		// 移動量
-	D3DXMATRIX	mtxWorld;	// マトリックス
-	SParts*		pParts;		// パーツの情報
-	int			numParts;	// パーツ数
-	float		moveLoad;	// 読み込んだ移動量
-	float		rot;		// 向き
-	float		rotDest;	// 目的の向き
+	D3DXVECTOR3	pos;				// 位置
+	D3DXVECTOR3	posOld;				// 前回の位置
+	D3DXVECTOR3	move;				// 移動量
+	D3DXMATRIX	mtxWorld;			// マトリックス
+	SParts*		pParts;				// パーツの情報
+	SMotion		motion[TYPE_MAX];	// モーションの情報
+	int			numParts;			// パーツ数
+	float		moveLoad;			// 読み込んだ移動量
+	float		rot;				// 向き
+	float		rotDest;			// 目的の向き
 };
 
 //==================================================

@@ -158,7 +158,6 @@
     <ClCompile Include="mode.cpp" />
     <ClCompile Include="model.cpp" />
     <ClCompile Include="rectangle.cpp" />
-    <ClCompile Include="rectangle3D.cpp" />
     <ClCompile Include="texture.cpp" />
     <ClCompile Include="utility.cpp" />
   </ItemGroup>
@@ -173,7 +172,6 @@
     <ClInclude Include="mode.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="rectangle.h" />
-    <ClInclude Include="rectangle3D.h" />
     <ClInclude Include="texture.h" />
     <ClInclude Include="utility.h" />
   </ItemGroup>
