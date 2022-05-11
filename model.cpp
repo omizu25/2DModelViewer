@@ -45,12 +45,11 @@ const float	MAX_BLEND = 20.0f;					// ブレンドの最大値
 //==================================================
 namespace
 {
-SModel	s_model;			// モデルの情報
-EType	s_IdxMotion;		// モーション番号
-int		s_nSelectMotion;	// 選ばれているモーション
-int		s_nFrame;			// フレーム数
-int		s_nIdxKey;			// キー番号
-bool	s_bMotionBlend;		// モーションブレンド
+SModel	s_model;		// モデルの情報
+EType	s_idxMotion;	// モーション番号
+int		s_idxKey;		// キー番号
+int		s_frame;		// フレーム数
+bool	s_motionBlend;	// モーションブレンド
 }// namespaceはここまで
 
 //==================================================
@@ -143,11 +142,10 @@ void InitModel(void)
 	s_model.posOld = s_model.pos;
 	s_model.rotDest = s_model.rot;
 	s_model.move = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-	s_IdxMotion = TYPE_NEUTRAL;
-	s_nSelectMotion = 0;
-	s_nFrame = 0;;
-	s_nIdxKey = 0;
-	s_bMotionBlend = true;
+	s_idxMotion = TYPE_NEUTRAL;
+	s_idxKey = 0;
+	s_frame = 0;
+	s_motionBlend = true;
 }
 
 //--------------------------------------------------
@@ -176,7 +174,7 @@ void UninitModel(void)
 	{
 		SMotion* pMotion = &s_model.motion[i];
 
-		for (int j = 0; j < pMotion->nNumKey; j++)
+		for (int j = 0; j < pMotion->numKey; j++)
 		{
 			SKeySet* pKeySet = &pMotion->pKeySet[i];
 
@@ -508,23 +506,23 @@ void LoadMotion(FILE* pFile, SMotion *pMotion)
 
 			if (loop == 0)
 			{// ループしない
-				pMotion->bLoop = false;
+				pMotion->loop = false;
 			}
 			else
 			{
-				pMotion->bLoop = true;
+				pMotion->loop = true;
 			}
 		}
 		else if (strcmp(read, "NUM_KEY") == 0)
 		{// キー数
 			fscanf(pFile, "%s", &read);
-			fscanf(pFile, "%d", &pMotion->nNumKey);
+			fscanf(pFile, "%d", &pMotion->numKey);
 
 			if (pMotion->pKeySet == nullptr)
 			{// NULLチェック
-				pMotion->pKeySet = new SKeySet[pMotion->nNumKey];
+				pMotion->pKeySet = new SKeySet[pMotion->numKey];
 
-				for (int i = 0; i < pMotion->nNumKey; i++)
+				for (int i = 0; i < pMotion->numKey; i++)
 				{
 					pMotion->pKeySet[i].pKey = nullptr;
 				}
@@ -536,7 +534,7 @@ void LoadMotion(FILE* pFile, SMotion *pMotion)
 		}
 		else if (strcmp(read, "KEYSET") == 0)
 		{// キー設定の情報
-			assert(countKeySet >= 0 && countKeySet < pMotion->nNumKey);
+			assert(countKeySet >= 0 && countKeySet < pMotion->numKey);
 
 			// キー設定の読み込み
 			LoadKeySet(pFile, &pMotion->pKeySet[countKeySet]);
@@ -575,7 +573,7 @@ void LoadKeySet(FILE* pFile, SKeySet *pKeySet)
 		if (strcmp(read, "FRAME") == 0)
 		{// ループするかどうか
 			fscanf(pFile, "%s", &read);
-			fscanf(pFile, "%d", &pKeySet->nFrame);
+			fscanf(pFile, "%d", &pKeySet->frame);
 		}
 		else if (strcmp(read, "KEY") == 0)
 		{// キーの情報
@@ -700,9 +698,9 @@ void Rot(void)
 //--------------------------------------------------
 void Motion(void)
 {
-	s_nFrame++;
+	s_frame++;
 
-	if (s_bMotionBlend)
+	if (s_motionBlend)
 	{// モーションブレンドをしている
 		// モーションブレンド
 		MotionBlend();
@@ -710,30 +708,30 @@ void Motion(void)
 		return;
 	}
 
-	SMotion* pMotion = &s_model.motion[s_IdxMotion];
-	SKeySet* pKeySet = &pMotion->pKeySet[s_nIdxKey];
+	SMotion* pMotion = &s_model.motion[s_idxMotion];
+	SKeySet* pKeySet = &pMotion->pKeySet[s_idxKey];
 
-	if (s_nFrame >= pMotion->pKeySet[s_nIdxKey].nFrame)
+	if (s_frame >= pMotion->pKeySet[s_idxKey].frame)
 	{// フレーム数が指定を超えた
 		// 前回の保存
 		OldSave();
 		
-		s_nIdxKey++;
+		s_idxKey++;
 
-		if (pMotion->bLoop)
+		if (pMotion->loop)
 		{// ループする
-			s_nIdxKey %= pMotion->nNumKey;
+			s_idxKey %= pMotion->numKey;
 		}
 		else
 		{// ループしない
-			if (s_nIdxKey >= pMotion->nNumKey)
+			if (s_idxKey >= pMotion->numKey)
 			{// キー数が超えた
 				// 次のモーション
 				NextMotion(TYPE_NEUTRAL);
 			}
 		}
 
-		s_nFrame = 0;
+		s_frame = 0;
 	}
 
 	for (int i = 0; i < s_model.numParts; i++)
@@ -743,14 +741,14 @@ void Motion(void)
 		D3DXVECTOR3 pos = pKeySet->pKey[i].pos;
 		pos -= pParts->posOld;
 		pos += pParts->savePos;
-		pos /= (float)pKeySet->nFrame;
+		pos /= (float)pKeySet->frame;
 
 		pParts->pos += pos;
 
 		float rot = pKeySet->pKey[i].rot;
 		rot -= pParts->rotOld;
 		rot += pParts->saveRot;
-		rot /= (float)pKeySet->nFrame;
+		rot /= (float)pKeySet->frame;
 
 		// 角度の正規化
 		NormalizeAngle(&rot);
@@ -764,15 +762,15 @@ void Motion(void)
 //--------------------------------------------------
 void NextMotion(EType type)
 {
-	if (s_IdxMotion == type)
+	if (s_idxMotion == type)
 	{// 現在と同じ
 		return;
 	}
 
-	s_nFrame = 0;
-	s_nIdxKey = 0;
-	s_IdxMotion = type;
-	s_bMotionBlend = true;
+	s_frame = 0;
+	s_idxKey = 0;
+	s_idxMotion = type;
+	s_motionBlend = true;
 
 	for (int i = 0; i < s_model.numParts; i++)
 	{
@@ -791,7 +789,7 @@ void OldSave(void)
 	for (int i = 0; i < s_model.numParts; i++)
 	{
 		SParts *pParts = &s_model.pParts[i];
-		SKey *pKey = &s_model.motion[s_IdxMotion].pKeySet[s_nIdxKey].pKey[i];
+		SKey *pKey = &s_model.motion[s_idxMotion].pKeySet[s_idxKey].pKey[i];
 
 		pParts->posOld = pParts->savePos + pKey->pos;
 		pParts->rotOld = pParts->saveRot + pKey->rot;
@@ -803,12 +801,12 @@ void OldSave(void)
 //--------------------------------------------------
 void MotionBlend(void)
 {
-	s_nIdxKey = 0;
+	s_idxKey = 0;
 
 	for (int i = 0; i < s_model.numParts; i++)
 	{
 		SParts *pParts = &s_model.pParts[i];
-		SKey *pKey = &s_model.motion[s_IdxMotion].pKeySet[s_nIdxKey].pKey[i];
+		SKey *pKey = &s_model.motion[s_idxMotion].pKeySet[s_idxKey].pKey[i];
 
 		D3DXVECTOR3 pos = ((pParts->savePos + pKey->pos) - pParts->posOld) / MAX_BLEND;
 		float rot = ((pParts->saveRot + pKey->rot) - pParts->rotOld) / MAX_BLEND;
@@ -820,14 +818,14 @@ void MotionBlend(void)
 		pParts->rot += rot;
 	}
 
-	if (s_nFrame >= MAX_BLEND)
+	if (s_frame >= MAX_BLEND)
 	{// フレーム数が超えた
 		// 前回の保存
 		OldSave();
 
-		s_bMotionBlend = false;
-		s_nFrame = 0;
-		s_nIdxKey++;
+		s_motionBlend = false;
+		s_frame = 0;
+		s_idxKey++;
 	}
 }
 }// namespaceはここまで

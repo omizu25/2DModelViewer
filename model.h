@@ -36,7 +36,7 @@ struct SKey
 
 struct SKeySet
 {
-	int		nFrame;	// フレーム数
+	int		frame;	// フレーム数
 	SKey*	pKey;	// キー
 };
 
@@ -44,8 +44,8 @@ struct SKeySet
 
 struct SMotion
 {
-	bool		bLoop;		// ループするかどうか
-	int			nNumKey;	// キー数
+	bool		loop;		// ループするかどうか
+	int			numKey;		// キー数
 	SKeySet*	pKeySet;	// キー設定
 };
 
