@@ -56,8 +56,8 @@ MODELSET
 	
 	PARTSSET					# [3]体003
 		INDEX = 1				# 使用するテクスチャ
-		PARENT = 0				# (親)体002
-		POS = 0.0 -90.0 0.0
+		PARENT = 1				# (親)体002
+		POS = 0.0 -60.0 0.0
 		ROT = 0.0
 		WIDTH = 30.0
 		HEIGHT = 30.0
@@ -66,8 +66,8 @@ MODELSET
 	
 	PARTSSET					# [4]体004
 		INDEX = 1				# 使用するテクスチャ
-		PARENT = 1				# (親)体003
-		POS = 0.0 -90.0 0.0
+		PARENT = 2				# (親)体003
+		POS = 0.0 -60.0 0.0
 		ROT = 0.0
 		WIDTH = 30.0
 		HEIGHT = 30.0
@@ -85,27 +85,27 @@ MOTIONSET
 	KEYSET			# --- << KEY : 0 / 2 >> ---
 		FRAME = 50
 		KEY	# ----- [ 0 ] -----
-			POS = 0.00 0.00 0.0
+			POS = 0.00 0.00 0.00
 			ROT = 0.00
 		END_KEY
 
 		KEY	# ----- [ 1 ] -----
 			POS = -50.00 0.00 0.00
-			ROT = 1.57
+			ROT = -1.57
 		END_KEY
 
 		KEY	# ----- [ 2 ] -----
 			POS = 50.00 0.00 0.00
-			ROT = 0.00
+			ROT = 1.57
 		END_KEY
 
 		KEY	# ----- [ 3 ] -----
-			POS = -50.00 0.00 0.00
+			POS = 0.00 0.00 0.00
 			ROT = 0.00
 		END_KEY
 
 		KEY	# ----- [ 4 ] -----
-			POS = 50.00 0.00 0.00
+			POS = 0.00 0.00 0.00
 			ROT = 0.00
 		END_KEY
 	END_KEYSET
@@ -119,21 +119,21 @@ MOTIONSET
 
 		KEY	# ----- [ 1 ] -----
 			POS = 50.00 0.00 0.00
-			ROT = -1.57
+			ROT = 1.57
 		END_KEY
 
 		KEY	# ----- [ 2 ] -----
 			POS = -50.00 0.00 0.00
-			ROT = 0.00
+			ROT = -1.57
 		END_KEY
 
 		KEY	# ----- [ 3 ] -----
-			POS = 50.00 0.00 0.00
+			POS = 0.00 0.00 0.00
 			ROT = 0.00
 		END_KEY
 
 		KEY	# ----- [ 4 ] -----
-			POS = -50.00 0.00 0.00
+			POS = 0.00 0.00 0.00
 			ROT = 0.00
 		END_KEY
 	END_KEYSET
@@ -147,57 +147,57 @@ MOTIONSET
 	NUM_KEY = 2		# キー数
 
 	KEYSET			# --- << KEY : 0 / 2 >> ---
-		FRAME = 50
+		FRAME = 8
 		KEY	# ----- [ 0 ] -----
 			POS = 0.00 0.00 0.00
 			ROT = 0.00
 		END_KEY
 
 		KEY	# ----- [ 1 ] -----
-			POS = 0.00 0.00 0.00
+			POS = 5.00 0.00 0.00
 			ROT = 0.00
 		END_KEY
 
 		KEY	# ----- [ 2 ] -----
-			POS = 0.00 0.00 0.00
+			POS = -5.00 0.00 0.00
 			ROT = 0.00
 		END_KEY
 
 		KEY	# ----- [ 3 ] -----
-			POS = 0.00 0.00 0.00
+			POS = 5.00 0.00 0.00
 			ROT = 0.00
 		END_KEY
 
 		KEY	# ----- [ 4 ] -----
-			POS = 0.00 0.00 0.00
+			POS = -5.00 0.00 0.00
 			ROT = 0.00
 		END_KEY
 	END_KEYSET
 
 	KEYSET			# --- << KEY : 1 / 2 >> ---
-		FRAME = 50
+		FRAME = 8
 		KEY	# ----- [ 0 ] -----
 			POS = 0.00 0.00 0.00
 			ROT = 0.00
 		END_KEY
 
 		KEY	# ----- [ 1 ] -----
-			POS = 0.00 0.00 0.00
+			POS = -5.00 0.00 0.00
 			ROT = 0.00
 		END_KEY
 
 		KEY	# ----- [ 2 ] -----
-			POS = 0.00 0.00 0.00
+			POS = 5.00 0.00 0.00
 			ROT = 0.00
 		END_KEY
 
 		KEY	# ----- [ 3 ] -----
-			POS = 0.00 0.00 0.00
+			POS = -5.00 0.00 0.00
 			ROT = 0.00
 		END_KEY
 
 		KEY	# ----- [ 4 ] -----
-			POS = 0.00 0.00 0.00
+			POS = 5.00 0.00 0.00
 			ROT = 0.00
 		END_KEY
 	END_KEYSET
