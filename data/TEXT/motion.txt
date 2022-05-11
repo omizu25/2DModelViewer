@@ -66,8 +66,8 @@ MODELSET
 	
 	PARTSSET					# [4]体004
 		INDEX = 1				# 使用するテクスチャ
-		PARENT = 0				# (親)体003
-		POS = 0.0 -120.0 0.0
+		PARENT = 1				# (親)体003
+		POS = 0.0 -90.0 0.0
 		ROT = 0.0
 		WIDTH = 30.0
 		HEIGHT = 30.0

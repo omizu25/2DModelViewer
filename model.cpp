@@ -37,7 +37,7 @@ struct VERTEX_3D
 const char*	FILE_NAME = "data/TEXT/motion.txt";	// ファイル名
 const int	MAX_TEXT = 1024;					// テキストの最大数
 const int	IDX_PARENT = -1;					// 親の番号
-const float	MAX_BLEND = 3.0f;					// ブレンドの最大値
+const float	MAX_BLEND = 20.0f;					// ブレンドの最大値
 }// namespaceはここまで
 
 //==================================================
@@ -148,7 +148,6 @@ void InitModel(void)
 	s_nFrame = 0;;
 	s_nIdxKey = 0;
 	s_bMotionBlend = true;
-	
 }
 
 //--------------------------------------------------
@@ -774,6 +773,14 @@ void NextMotion(EType type)
 	s_nIdxKey = 0;
 	s_IdxMotion = type;
 	s_bMotionBlend = true;
+
+	for (int i = 0; i < s_model.numParts; i++)
+	{
+		SParts *pParts = &s_model.pParts[i];
+		
+		pParts->posOld = pParts->pos;
+		pParts->rotOld = pParts->rot;
+	}
 }
 
 //--------------------------------------------------
@@ -797,31 +804,23 @@ void OldSave(void)
 void MotionBlend(void)
 {
 	s_nIdxKey = 0;
-	bool bArrivalPos = true;
-	bool bArrivalRot = true;
 
 	for (int i = 0; i < s_model.numParts; i++)
 	{
 		SParts *pParts = &s_model.pParts[i];
 		SKey *pKey = &s_model.motion[s_IdxMotion].pKeySet[s_nIdxKey].pKey[i];
 
-		D3DXVECTOR3 pos = pParts->savePos + pKey->pos;
-
-		if (!Homing(&pParts->pos, pParts->pos, pos, MAX_BLEND))
-		{// ホーミング
-			bArrivalPos = false;
-		}
-
-		float rotDest = pParts->saveRot + pKey->rot;
-		float length = (rotDest - pParts->rot) / MAX_BLEND;
+		D3DXVECTOR3 pos = ((pParts->savePos + pKey->pos) - pParts->posOld) / MAX_BLEND;
+		float rot = ((pParts->saveRot + pKey->rot) - pParts->rotOld) / MAX_BLEND;
 
 		// 角度の正規化
-		NormalizeAngle(&length);
+		NormalizeAngle(&rot);
 
-		pParts->rot += length;
+		pParts->pos += pos;
+		pParts->rot += rot;
 	}
 
-	if (bArrivalPos && bArrivalRot)
+	if (s_nFrame >= MAX_BLEND)
 	{// フレーム数が超えた
 		// 前回の保存
 		OldSave();
