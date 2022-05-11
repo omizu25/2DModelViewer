@@ -37,6 +37,7 @@ struct VERTEX_3D
 const char*	FILE_NAME = "data/TEXT/motion.txt";	// ファイル名
 const int	MAX_TEXT = 1024;					// テキストの最大数
 const int	IDX_PARENT = -1;					// 親の番号
+const float	MAX_BLEND = 3.0f;					// ブレンドの最大値
 }// namespaceはここまで
 
 //==================================================
@@ -44,7 +45,12 @@ const int	IDX_PARENT = -1;					// 親の番号
 //==================================================
 namespace
 {
-SModel	s_model;	// モデルの情報
+SModel	s_model;			// モデルの情報
+EType	s_IdxMotion;		// モーション番号
+int		s_nSelectMotion;	// 選ばれているモーション
+int		s_nFrame;			// フレーム数
+int		s_nIdxKey;			// キー番号
+bool	s_bMotionBlend;		// モーションブレンド
 }// namespaceはここまで
 
 //==================================================
@@ -60,6 +66,10 @@ void LoadKeySet(FILE* pFile, SKeySet* pKeySet);
 void LoadKey(FILE* pFile, SKey* pKey);
 void Move(void);
 void Rot(void);
+void Motion(void);
+void NextMotion(EType type);
+void OldSave(void);
+void MotionBlend(void);
 }// namespaceはここまで
 
 //--------------------------------------------------
@@ -121,6 +131,24 @@ void InitModel(void)
 		// 頂点バッファをアンロックする
 		pParts->pVtxBuff->Unlock();
 	}
+
+	for (int i = 0; i < s_model.numParts; i++)
+	{
+		s_model.pParts[i].savePos = s_model.pParts[i].pos;
+		s_model.pParts[i].saveRot = s_model.pParts[i].rot;
+		s_model.pParts[i].posOld = s_model.pParts[i].pos;
+		s_model.pParts[i].rotOld = s_model.pParts[i].rot;
+	}
+
+	s_model.posOld = s_model.pos;
+	s_model.rotDest = s_model.rot;
+	s_model.move = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	s_IdxMotion = TYPE_NEUTRAL;
+	s_nSelectMotion = 0;
+	s_nFrame = 0;;
+	s_nIdxKey = 0;
+	s_bMotionBlend = true;
+	
 }
 
 //--------------------------------------------------
@@ -178,6 +206,9 @@ void UpdateModel(void)
 
 	// 回転
 	Rot();
+
+	// モーション
+	Motion();
 }
 
 //--------------------------------------------------
@@ -428,13 +459,11 @@ void LoadParts(FILE* pFile, ETexture* pTexture, SParts* pParts)
 			fscanf(pFile, "%f", &pParts->pos.x);
 			fscanf(pFile, "%f", &pParts->pos.y);
 			fscanf(pFile, "%f", &pParts->pos.z);
-			pParts->posOld = pParts->pos;
 		}
 		else if (strcmp(read, "ROT") == 0)
 		{// 向き
 			fscanf(pFile, "%s", &read);
 			fscanf(pFile, "%f", &pParts->rot);
-			pParts->rotOld = pParts->rot;
 		}
 		else if (strcmp(read, "WIDTH") == 0)
 		{// 幅
@@ -618,8 +647,14 @@ void Move(void)
 
 	if ((vec.x == 0.0f) && (vec.y == 0.0f))
 	{// 移動してない
+		// 次のモーション
+		NextMotion(TYPE_NEUTRAL);
+		
 		return;
 	}
+
+	// 次のモーション
+	NextMotion(TYPE_MOVE);
 
 	// ベクトルの正規化
 	D3DXVec3Normalize(&vec, &vec);
@@ -659,5 +694,141 @@ void Rot(void)
 
 	// 角度の正規化
 	NormalizeAngle(&s_model.rot);
+}
+
+//--------------------------------------------------
+// モーション
+//--------------------------------------------------
+void Motion(void)
+{
+	s_nFrame++;
+
+	if (s_bMotionBlend)
+	{// モーションブレンドをしている
+		// モーションブレンド
+		MotionBlend();
+
+		return;
+	}
+
+	SMotion* pMotion = &s_model.motion[s_IdxMotion];
+	SKeySet* pKeySet = &pMotion->pKeySet[s_nIdxKey];
+
+	if (s_nFrame >= pMotion->pKeySet[s_nIdxKey].nFrame)
+	{// フレーム数が指定を超えた
+		// 前回の保存
+		OldSave();
+		
+		s_nIdxKey++;
+
+		if (pMotion->bLoop)
+		{// ループする
+			s_nIdxKey %= pMotion->nNumKey;
+		}
+		else
+		{// ループしない
+			if (s_nIdxKey >= pMotion->nNumKey)
+			{// キー数が超えた
+				// 次のモーション
+				NextMotion(TYPE_NEUTRAL);
+			}
+		}
+
+		s_nFrame = 0;
+	}
+
+	for (int i = 0; i < s_model.numParts; i++)
+	{
+		SParts* pParts = &s_model.pParts[i];
+
+		D3DXVECTOR3 pos = pKeySet->pKey[i].pos;
+		pos -= pParts->posOld;
+		pos += pParts->savePos;
+		pos /= (float)pKeySet->nFrame;
+
+		pParts->pos += pos;
+
+		float rot = pKeySet->pKey[i].rot;
+		rot -= pParts->rotOld;
+		rot += pParts->saveRot;
+		rot /= (float)pKeySet->nFrame;
+
+		// 角度の正規化
+		NormalizeAngle(&rot);
+
+		pParts->rot += rot;
+	}
+}
+
+//--------------------------------------------------
+// 次のモーション
+//--------------------------------------------------
+void NextMotion(EType type)
+{
+	if (s_IdxMotion == type)
+	{// 現在と同じ
+		return;
+	}
+
+	s_nFrame = 0;
+	s_nIdxKey = 0;
+	s_IdxMotion = type;
+	s_bMotionBlend = true;
+}
+
+//--------------------------------------------------
+// 前回の保存
+//--------------------------------------------------
+void OldSave(void)
+{
+	for (int i = 0; i < s_model.numParts; i++)
+	{
+		SParts *pParts = &s_model.pParts[i];
+		SKey *pKey = &s_model.motion[s_IdxMotion].pKeySet[s_nIdxKey].pKey[i];
+
+		pParts->posOld = pParts->savePos + pKey->pos;
+		pParts->rotOld = pParts->saveRot + pKey->rot;
+	}
+}
+
+//--------------------------------------------------
+// モーションブレンド
+//--------------------------------------------------
+void MotionBlend(void)
+{
+	s_nIdxKey = 0;
+	bool bArrivalPos = true;
+	bool bArrivalRot = true;
+
+	for (int i = 0; i < s_model.numParts; i++)
+	{
+		SParts *pParts = &s_model.pParts[i];
+		SKey *pKey = &s_model.motion[s_IdxMotion].pKeySet[s_nIdxKey].pKey[i];
+
+		D3DXVECTOR3 pos = pParts->savePos + pKey->pos;
+
+		if (!Homing(&pParts->pos, pParts->pos, pos, MAX_BLEND))
+		{// ホーミング
+			bArrivalPos = false;
+		}
+
+		float rotDest = pParts->saveRot + pKey->rot;
+		float length = (rotDest - pParts->rot) / MAX_BLEND;
+
+		// 角度の正規化
+		NormalizeAngle(&length);
+
+		pParts->rot += length;
+	}
+
+	if (bArrivalPos && bArrivalRot)
+	{// フレーム数が超えた
+		// 前回の保存
+		OldSave();
+
+		s_bMotionBlend = false;
+		s_nFrame = 0;
+		s_nIdxKey++;
+	}
 }
 }// namespaceはここまで

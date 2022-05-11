@@ -55,6 +55,7 @@ struct SParts
 {
 	D3DXVECTOR3				pos;			// 位置
 	D3DXVECTOR3				posOld;			// 前回の位置
+	D3DXVECTOR3				savePos;		// 位置を保存
 	D3DXMATRIX				mtxWorld;		// マトリックス
 	LPDIRECT3DVERTEXBUFFER9	pVtxBuff;		// 頂点バッファ
 	ETexture				texture;		// テクスチャ
@@ -63,6 +64,7 @@ struct SParts
 	int						idxPriority;	// 描画の優先順位
 	float					rot;			// 向き
 	float					rotOld;			// 前回の向き
+	float					saveRot;		// 向きの保存
 	float					width;			// 幅
 	float					height;			// 高さ
 };
